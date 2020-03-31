@@ -1,17 +1,17 @@
-import * as mongoose from 'mongoose';
+import { Schema } from 'mongoose';
 
-export const OwnerSchema = new mongoose.Schema({
+export const OwnerSchema = new Schema({
   name: String,
   age: Number,
   cats: [
     {
-      type: mongoose.Schema.ObjectId,
+      type: Schema.ObjectId,
       ref: 'Cat',
     },
   ],
   dogs: [
     {
-      type: mongoose.Schema.ObjectId,
+      type: Schema.ObjectId,
       ref: 'Cat',
     },
   ],

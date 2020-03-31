@@ -1,5 +1,5 @@
 import { Model } from 'mongoose';
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Cat } from './interfaces/cat.interface';
 import { Dog } from './interfaces/dog.interface';
@@ -7,6 +7,7 @@ import { Owner } from './interfaces/owner.interface';
 import { getTotalWeight } from './weight.helper';
 import { CreateCatDto } from './dto/create.cat.dto';
 import { CreateDogDto } from './dto/create.dog.dto';
+import { PetTypes } from './pets.controller.helper';
 
 @Injectable()
 export class PetsService {
@@ -17,31 +18,31 @@ export class PetsService {
   ) {}
 
   async addCat(createCatDto: CreateCatDto): Promise<Cat> {
-    var createdCat = new this.catModel(createCatDto);
+    const createdCat = new this.catModel(createCatDto);
     return createdCat.save();
   }
 
   async addDog(createDogDto: CreateDogDto): Promise<Dog> {
-    var createdDog = new this.dogModel(createDogDto);
+    const createdDog = new this.dogModel(createDogDto);
     return createdDog.save();
   }
 
-  async findAll<T = Cat | Dog>(petType?: 'cat' | 'dog'): Promise<T[]> {
+  async findAll<T = Cat | Dog>(petType?: PetTypes): Promise<T[]> {
     switch (petType) {
-      case 'cat':
+      case PetTypes.cat:
         return this.catModel.find().exec();
-      case 'dog':
+      case PetTypes.dog:
         return this.dogModel.find().exec();
       default:
         return [
           ...(await this.catModel.find().exec()),
-          ...(await this.catModel.find().exec()),
+          ...(await this.dogModel.find().exec()),
         ];
     }
   }
 
   async findCatById(catId: string): Promise<Cat> {
-    var cat = await this.catModel.findById(catId);
+    const cat = await this.catModel.findById(catId);
     if (!cat) {
       throw new HttpException(
         'Cat with given id can not be found',
@@ -52,8 +53,8 @@ export class PetsService {
     return cat;
   }
 
-  async findDogById(catId: string): Promise<Dog> {
-    var dog = await this.dogModel.findById(catId);
+  async findDogById(dogId: string): Promise<Dog> {
+    const dog = await this.dogModel.findById(dogId);
     if (!dog) {
       throw new HttpException(
         'Dog with given id can not be found',
@@ -65,18 +66,18 @@ export class PetsService {
   }
 
   async getCatsWeight(): Promise<number> {
-    var cats = await this.catModel.find({}, { weight: 1 }).exec();
+    const cats = await this.catModel.find({}, { weight: 1 }).exec();
     return getTotalWeight(cats);
   }
 
   async getDogsWeight(): Promise<number> {
-    var dogs = await this.dogModel.find({}, { weight: 1 }).exec();
+    const dogs = await this.dogModel.find({}, { weight: 1 }).exec();
     return getTotalWeight(dogs);
   }
 
   async getHappyDogs(): Promise<string[]> {
-    var dogs = await this.dogModel.find({}, { name: 1 }).exec();
-    var happyDogs = [];
+    const dogs = await this.dogModel.find({}, { name: 1 }).exec();
+    const happyDogs = [];
     for (const dog of dogs) {
       // Check if dog is wagging its tail
       const isWagging = ((await this.dogModel
@@ -91,7 +92,7 @@ export class PetsService {
   }
 
   async getTopThreePetOwnersAtAge(ownerAge: number): Promise<any> {
-    var owners = await this.ownerModel.aggregate([
+    const owners = await this.ownerModel.aggregate([
       {
         $group: {
           _id: {
@@ -137,13 +138,12 @@ export class PetsService {
       },
     ]);
 
-    let result = [];
-    for (const owner of owners) {
-      result.push({
+    const result = owners.map((owner) => {
+      return {
         petsCount: owner._id,
-        owners: owner.owners.filter(owner => owner.age == ownerAge),
-      });
-    }
+        owners: owner.owners.filter((currentOwner: Owner) => currentOwner.age === ownerAge),
+      };
+    });
 
     return result.slice(0, 3);
   }

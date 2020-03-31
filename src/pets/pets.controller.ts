@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { PetsService } from './pets.service';
 import { Cat } from './interfaces/cat.interface';
 import { Dog } from './interfaces/dog.interface';
 import { CreateCatDto } from './dto/create.cat.dto';
 import { CreateDogDto } from './dto/create.dog.dto';
+import { PetTypes } from './pets.controller.helper';
 
 @Controller('pets')
 export class PetsController {
@@ -26,12 +27,12 @@ export class PetsController {
 
   @Get('/cats')
   async findCats(): Promise<Cat[]> {
-    return await this.petsService.findAll<Cat>('cat');
+    return await this.petsService.findAll<Cat>(PetTypes.cat);
   }
 
   @Get('/dogs')
   async findDogs(): Promise<Dog[]> {
-    return await this.petsService.findAll<Dog>('dog');
+    return await this.petsService.findAll<Dog>(PetTypes.dog);
   }
 
   @Get('/cats/:id')
@@ -60,7 +61,7 @@ export class PetsController {
   }
 
   @Get('/top-owners/:age')
-  async getPetOwners(@Param('id') age: number): Promise<string[]> {
-    return await this.petsService.getTopThreePetOwnersAtAge(18);
+  async getPetOwners(@Param('age') age: number): Promise<string[]> {
+    return await this.petsService.getTopThreePetOwnersAtAge(age);
   }
 }
